@@ -8,7 +8,8 @@
   "project_page": "https://github.com/T0rt4nk/puppet-module",
   "issues_url": "https://github.com/T0rt4nk/puppet-module/issues",
   "dependencies": [
-    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
+    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"},
+    {"name":"puppetlabs-motd","version_requirement":">= 1.4.0"}
   ],
   "data_provider": null
 }
