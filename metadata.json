@@ -1,0 +1,15 @@
+{
+  "name": "rulz-tortank",
+  "version": "0.1.0",
+  "author": "Ixday",
+  "summary": "Main module for installing tortank server",
+  "license": "MIT",
+  "source": "https://github.com/T0rt4nk/puppet-module",
+  "project_page": "https://github.com/T0rt4nk/puppet-module",
+  "issues_url": "https://github.com/T0rt4nk/puppet-module/issues",
+  "dependencies": [
+    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
+  ],
+  "data_provider": null
+}
+
