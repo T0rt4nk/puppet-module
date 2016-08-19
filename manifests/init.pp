@@ -43,7 +43,5 @@
 # Copyright 2016 Your name here, unless otherwise noted.
 #
 class tortank {
-  class { 'motd':
-    template => 'tortank/motd.erb',
-  }
+  include tortank::base
 }
