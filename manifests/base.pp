@@ -2,7 +2,7 @@ class tortank::base {
 
   $packages_uninstall = ['apt-listchange']
   $packages_experimental = ['neovim']
-  $packages = ['git', 'tig', 'zsh', 'tmux', 'apt-file', 'ranger']
+  $packages = ['git', 'tig', 'zsh', 'tmux', 'apt-file', 'ranger', 'make']
 
   package { $packages_uninstall:
     ensure => purged,
@@ -28,11 +28,12 @@ class tortank::base {
     unless  => 'test -n "$(ls -A  /var/cache/apt/apt-file)"',
   }
 
-  include tortank::python
-
   class { 'motd':
     template => 'tortank/motd.erb',
   }
+
+  include tortank::python
+  include tortank::users
 }
 
 class tortank::python {
@@ -47,4 +48,8 @@ class tortank::python {
     provider => 'pip',
     ensure   => installed,
   }
+}
+
+class tortank::users {
+  include tortank::users::max
 }
