@@ -26,7 +26,7 @@ class tortank::users (
     shell      => "/usr/bin/zsh",
     ensure     => "present",
     managehome => true,
-    password   => hiera("$user_.password"),
+    password   => pw_hash(hiera("$user_.password"), "SHA-512", fqdn_rand_string(8)),
   }
 
   file { $remove:
@@ -52,13 +52,13 @@ class tortank::users (
     refreshonly => true,
   }
 
+  unique(values($xdg_dirs_)).each |$value| {
+    file { $value: ensure => "directory" }
+  }
+
   file { "$home_/.config/user-dirs.dirs":
     content => inline_epp($xdg_template, $xdg_dirs),
     notify  => Exec["update $user_ xdg dirs"],
-  }
-
-  unique(values($xdg_dirs_)).each |$value| {
-    file { $value: ensure => "directory" }
   }
 
   exec { "update $user_ xdg dirs":
