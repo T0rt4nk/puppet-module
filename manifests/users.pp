@@ -1,43 +1,56 @@
-class tortank::users::max {
-  $home = "/home/max"
+class tortank::users (String $user) {
+  $home = "/home/$user"
+
   $dev_dir = "$home/development"
   $remove = ["$home/.bash_logout", "$home/.bashrc"]
+  $xdg_dirs = {
+    desktop   => '',
+    downloads => '$HOME/downloads',
+    templates => '',
+    public    => '',
+    documents => '$HOME/documents',
+    music     => '$HOME/music',
+    pictures  => '$HOME/pictures',
+    videos    => '$HOME/videos',
+  }
 
+  Exec { user  => "$user" }
+  File { owner => "$user", group => "$user" }
 
-  user { 'max':
-    ensure   => 'present',
-    home     => '/home/max',
-    shell    => '/usr/bin/zsh',
-    password => hiera('max.password'),
+  user { "$user":
+    shell      => "/usr/bin/zsh",
+    ensure     => "present",
+    managehome => true,
+    password   => hiera("$user.password"),
   }
 
   file { $remove:
-    ensure => 'absent',
+    ensure => "absent",
   }
 
   file { $dev_dir:
-    ensure => 'directory',
-    owner  => 'max'
+    ensure => "directory",
   }
 
-  exec { 'clone max dotfiles':
+  exec { "clone $user dotfiles":
     cwd     => $dev_dir,
-    command => 'git clone --recursive https://github.com/IxDay/dotfiles',
-    path    => '/usr/bin/:/bin/',
-    unless  => 'test -e dotfiles',
-    user    => 'max',
-    notify  => Exec['install max dotfiles'],
+    command => "git clone --recursive https://github.com/IxDay/dotfiles",
+    path    => "/usr/bin/:/bin/",
+    unless  => "test -e dotfiles",
+    notify  => Exec["install $user dotfiles"],
   }
 
-  exec { 'install max dotfiles':
+  exec { "install $user dotfiles":
     cwd         => "$dev_dir/dotfiles",
-    environment => ['HOME=/home/max'],
-    command     => '/usr/bin/make',
-    user        => 'max',
+    environment => ["HOME=$home"],
+    command     => "/usr/bin/make",
     refreshonly => true,
   }
 
-  class { 'tortank::xdg':
-    user => 'max'
-  }
+  #$xdg_dirs.each |$key, $value| {
+  #  file { $value:
+  #    ensure => "directory",
+  #  }
+    #}
+
 }
