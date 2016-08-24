@@ -34,7 +34,19 @@ class tortank::base {
 
   include tortank::python
 
-  class { tortank::users: user => "max", }
+  class { tortank::users:
+    user          => "max",
+    xdg_dirs      => {
+      download    => '$HOME/downloads',
+      templates   => '$HOME',
+      publicshare => '$HOME',
+      desktop     => '$HOME',
+      documents   => '$HOME/documents',
+      music       => '$HOME/music',
+      pictures    => '$HOME/pictures',
+      videos      => '$HOME/videos',
+    }
+  }
 }
 
 class tortank::python {

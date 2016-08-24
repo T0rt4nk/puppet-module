@@ -1,27 +1,32 @@
-class tortank::users (String $user) {
-  $home = "/home/$user"
+class tortank::users (
+  String $user = "",
+  String $home = "",
+  Hash $xdg_dirs = {},
+) {
+  if $user == "" { $user_ = "guest" } else { $user_ = $user }
+  if $home == "" { $home_ = "/home/$user" } else { $home_ = $home }
 
-  $dev_dir = "$home/development"
-  $remove = ["$home/.bash_logout", "$home/.bashrc"]
-  $xdg_dirs = {
-    desktop   => '',
-    downloads => '$HOME/downloads',
-    templates => '',
-    public    => '',
-    documents => '$HOME/documents',
-    music     => '$HOME/music',
-    pictures  => '$HOME/pictures',
-    videos    => '$HOME/videos',
-  }
+  $xdg_dirs_ = hash($xdg_dirs.map |$key, $value| {
+    [$key, inline_epp(regsubst($value, '\$HOME', '<%= $home_ %>'))]
+  })
 
-  Exec { user  => "$user" }
-  File { owner => "$user", group => "$user" }
+  $dev_dir = sprintf("%s/development", $xdg_dirs_["documents"])
+  $remove = ["$home_/.bash_logout", "$home_/.bashrc"]
 
-  user { "$user":
+  $xdg_template = @(END)
+  <% $xdg_dirs.each |$key, $value| { -%>
+  XDG_<%= upcase($key) %>_DIR="<%= $value %>"
+  <% } -%>
+  | END
+
+  Exec { user  => "$user_" }
+  File { owner => "$user_", group => "$user_" }
+
+  user { "$user_":
     shell      => "/usr/bin/zsh",
     ensure     => "present",
     managehome => true,
-    password   => hiera("$user.password"),
+    password   => hiera("$user_.password"),
   }
 
   file { $remove:
@@ -32,25 +37,33 @@ class tortank::users (String $user) {
     ensure => "directory",
   }
 
-  exec { "clone $user dotfiles":
+  exec { "clone $user_ dotfiles":
     cwd     => $dev_dir,
     command => "git clone --recursive https://github.com/IxDay/dotfiles",
     path    => "/usr/bin/:/bin/",
     unless  => "test -e dotfiles",
-    notify  => Exec["install $user dotfiles"],
+    notify  => Exec["install $user_ dotfiles"],
   }
 
-  exec { "install $user dotfiles":
+  exec { "install $user_ dotfiles":
     cwd         => "$dev_dir/dotfiles",
-    environment => ["HOME=$home"],
+    environment => ["HOME=$home_"],
     command     => "/usr/bin/make",
     refreshonly => true,
   }
 
-  #$xdg_dirs.each |$key, $value| {
-  #  file { $value:
-  #    ensure => "directory",
-  #  }
-    #}
+  file { "$home_/.config/user-dirs.dirs":
+    content => inline_epp($xdg_template, $xdg_dirs),
+    notify  => Exec["update $user_ xdg dirs"],
+  }
+
+  unique(values($xdg_dirs_)).each |$value| {
+    file { $value: ensure => "directory" }
+  }
+
+  exec { "update $user_ xdg dirs":
+    command     => "/usr/bin/xdg-user-dirs-update",
+    refreshonly => true,
+  }
 
 }
