@@ -39,7 +39,7 @@ class tortank::users (
 
   exec { "clone $user_ dotfiles":
     cwd     => $dev_dir,
-    command => "git clone --recursive https://github.com/IxDay/dotfiles",
+    command => "git clone --recursive https://github.com/IxDay/dotfiles.git",
     path    => "/usr/bin/:/bin/",
     unless  => "test -e dotfiles",
     notify  => Exec["install $user_ dotfiles"],
@@ -65,5 +65,13 @@ class tortank::users (
     command     => "/usr/bin/xdg-user-dirs-update",
     refreshonly => true,
   }
+
+  exec { "clone $user_ vim setup":
+    cwd     => "$home_/.config",
+    command => "git clone --recursive https://github.com/IxDay/.vim.git nvim",
+    path    => "/usr/bin/:/bin/",
+    unless  => "test -e nvim",
+  }
+
 
 }
