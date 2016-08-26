@@ -1,0 +1,9 @@
+[org/nemo/window-state]
+start-with-sidebar=true
+geometry='800x527+2470+375'
+maximized=false
+sidebar-bookmark-breakpoint=5
+
+[org/nemo/desktop]
+home-icon-visible=false
+computer-icon-visible=false

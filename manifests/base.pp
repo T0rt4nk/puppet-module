@@ -1,7 +1,14 @@
 class tortank::base {
+  include tortank::config
   include tortank::packages
+
   include tortank::cinnamon
   include tortank::python
+  include tortank::dconf
+
+  class { "motd":
+    template => "tortank/motd.erb",
+  }
 
   class { tortank::users:
     user          => "max",
@@ -18,11 +25,8 @@ class tortank::base {
   }
 }
 
-class tortank::packages {
-  $packages_uninstall = ["apt-listchange"]
-  $packages_experimental = ["neovim"]
-  $packages = ["git", "tig", "zsh", "tmux", "apt-file", "ranger", "make"]
-
+class tortank::packages::init {
+  $debian_mirror = "http://httpredir.debian.org/debian"
   class { "apt":
     purge => {
       "sources.list"   => true,
@@ -31,13 +35,12 @@ class tortank::packages {
       "preferences.d"  => true,
     },
   }
-
   Apt::Source {
     include => {'deb' => true, 'src' => true}
   }
 
   apt::source { "stable":
-    location   => "http://httpredir.debian.org/debian/",
+    location   => "$debian_mirror",
     repos      => "main non-free contrib",
     release    => "stable",
     pin        => {
@@ -47,7 +50,7 @@ class tortank::packages {
   }
 
   apt::source { "stable-updates":
-    location => "http://httpredir.debian.org/debian/",
+    location => "$debian_mirror",
     repos    => "main non-free contrib",
     release  => "stable-updates",
     pin        => {
@@ -61,23 +64,23 @@ class tortank::packages {
     repos      => "main non-free contrib",
     release    => "stable/updates",
     pin        => {
-      priority => 990,
+      priority => 1010,
       label    => "Debian-Security",
     }
   }
 
   apt::source { "unstable":
-    location => "http://httpredir.debian.org/debian/",
+    location => "$debian_mirror",
     repos    => "main non-free contrib",
     release  => "unstable",
     pin        => {
-      priority => 650,
+      priority => 450,
       release  => "unstable",
     }
   }
 
   apt::source { "experimental":
-    location => "http://httpredir.debian.org/debian/",
+    location => "$debian_mirror",
     repos    => "main non-free contrib",
     release  => "experimental",
     pin        => {
@@ -85,63 +88,77 @@ class tortank::packages {
       release  => "experimental",
     }
   }
+}
 
-  package { $packages_uninstall:
-    ensure => purged,
-  }
+class tortank::packages {
+  require tortank::packages::init
+
+  $packages_uninstall = ["apt-listchange"]
+  $packages_experimental = ["neovim"]
+  $packages = [
+    "git", "tig", "zsh", "tmux", "ranger", "make", "apt-file",
+    "rxvt-unicode-256color"
+  ]
+
+  Package { ensure => installed }
+
+  package { $packages_uninstall: ensure => purged, }
 
   package { $packages_experimental:
-    ensure          => installed,
     install_options => ["-t", "experimental"],
+    require  => Exec["apt_update"],
   }
 
   package { $packages:
-    ensure => installed,
+    require  => Exec["apt_update"],
   }
 
   file { "/usr/local/bin/vim":
-    ensure => "link",
-    target => "/usr/bin/nvim",
+    ensure  => "link",
+    target  => "/usr/bin/nvim",
+    require => Package["neovim"],
   }
 
   exec { "refresh apt-file":
     command => "apt-file update",
     path    => "/usr/bin/:/bin/",
     unless  => 'test -n "$(ls -A  /var/cache/apt/apt-file)"',
-  }
-
-  class { "motd":
-    template => "tortank/motd.erb",
+    require => Package["apt-file"],
   }
 
 }
 
 class tortank::python {
+  require tortank::packages
+
   $packages = ["python-dev", "virtualenv", "ipython", "python-pip"]
   $packages_pip = ["pdbpp", "path.py"]
+  Package { ensure => installed }
+
 
   package { $packages:
-    ensure => installed,
+    install_options => ["--force-yes"],
+    require         => Exec["apt_update"]
   }
 
   package { $packages_pip:
     provider => "pip",
-    ensure   => installed,
+    require  => Package["python-pip"]
   }
 }
 
-class tortank::cinnamon {
-  $packages = [
-    "xserver-xorg", "xserver-xorg-core", "xfonts-base",
-    "xinit", "cinnamon-core", "lightdm", "libgl1-mesa-dri"
-  ]
-
-  package { $packages:
-    ensure => installed,
+class tortank::config {
+  class { "locales":
+    default_locale  => "en_US.UTF-8",
+    locales         => ["en_US.UTF-8 UTF-8", "fr_FR.UTF-8 UTF-8"],
   }
 
-  file { "/etc/X11/xorg.conf.d/":
-    ensure => absent,
-    force  => true
+  class { tortank::keyboard:
+    layout => "fr"
+  }
+
+  file { "/etc/alternatives/x-cursor-theme":
+    ensure => link,
+    target => "/usr/share/icons/DMZ-White/cursor.theme",
   }
 }

@@ -3,6 +3,8 @@ class tortank::users (
   String $home = "",
   Hash $xdg_dirs = {},
 ) {
+  require tortank::packages
+
   if $user == "" { $user_ = "guest" } else { $user_ = $user }
   if $home == "" { $home_ = "/home/$user" } else { $home_ = $home }
 
@@ -11,7 +13,10 @@ class tortank::users (
   })
 
   $dev_dir = sprintf("%s/development", $xdg_dirs_["documents"])
-  $remove = ["$home_/.bash_logout", "$home_/.bashrc"]
+  $remove = [
+    "$home_/.bash_logout", "$home_/.bashrc", "$home_/.bash_history",
+    "$home_/.profile"
+  ]
 
   $xdg_template = @(END)
   <% $xdg_dirs.each |$key, $value| { -%>
@@ -27,15 +32,15 @@ class tortank::users (
     ensure     => "present",
     managehome => true,
     password   => pw_hash(hiera("$user_.password"), "SHA-512", fqdn_rand_string(8)),
-  }
+  } ->
 
   file { $remove:
     ensure => "absent",
-  }
+  } ->
 
   file { $dev_dir:
     ensure => "directory",
-  }
+  } ->
 
   exec { "clone $user_ dotfiles":
     cwd     => $dev_dir,
@@ -43,7 +48,7 @@ class tortank::users (
     path    => "/usr/bin/:/bin/",
     unless  => "test -e dotfiles",
     notify  => Exec["install $user_ dotfiles"],
-  }
+  } ->
 
   exec { "install $user_ dotfiles":
     cwd         => "$dev_dir/dotfiles",
@@ -59,19 +64,47 @@ class tortank::users (
   file { "$home_/.config/user-dirs.dirs":
     content => inline_epp($xdg_template, $xdg_dirs),
     notify  => Exec["update $user_ xdg dirs"],
-  }
+  } ->
 
   exec { "update $user_ xdg dirs":
     command     => "/usr/bin/xdg-user-dirs-update",
     refreshonly => true,
   }
 
-  exec { "clone $user_ vim setup":
-    cwd     => "$home_/.config",
-    command => "git clone --recursive https://github.com/IxDay/.vim.git nvim",
-    path    => "/usr/bin/:/bin/",
-    unless  => "test -e nvim",
+  class { tortank::users::vim:
+    user => $user_,
+    home => $home_
   }
 
+}
 
+class tortank::users::vim (
+  String $user = "",
+  String $home = "",
+) {
+  $nvim_dir = "$home/.config/nvim"
+  $nvim_repo = "https://github.com/IxDay/.vim.git"
+
+  class { tortank::users::vim::init: } ~>
+  class { tortank::users::vim::install: }
+}
+
+class tortank::users::vim::init inherits tortank::users::vim {
+  exec { "clone $user vim setup":
+    cwd     => dirname($nvim_dir),
+    command => sprintf(
+      "git clone --recursive %s %s", $nvim_repo, basename($nvim_dir)
+    ),
+    path    => "/usr/bin/:/bin/",
+    unless  => sprintf("test -e %s", basename($nvim_dir)),
+  }
+}
+
+class tortank::users::vim::install inherits tortank::users::vim {
+  exec { "vim +PluginInstall +qall":
+    path        => "/usr/bin/:/usr/local/bin/",
+    cwd         => $home,
+    environment => ["HOME=$home"],
+    refreshonly => true
+  }
 }

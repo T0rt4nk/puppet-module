@@ -10,7 +10,8 @@
   "dependencies": [
     {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"},
     {"name":"puppetlabs-motd","version_requirement":">= 1.4.0"},
-	{"name":"puppetlabs-apt","version_requirement":">=2.2.2"}
+	{"name":"puppetlabs-apt","version_requirement":">=2.2.2"},
+	{"name":"saz-locales","version_requirement":">=2.2.2"}
   ],
   "data_provider": null
 }
