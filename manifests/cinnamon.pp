@@ -19,6 +19,12 @@ class tortank::cinnamon::install {
     install_options => ["-o", "Acquire::Retries=10"], # Long install need retries
   }
 
+  file { "/etc/alternatives/x-cursor-theme":
+    ensure  => link,
+    target  => "/usr/share/icons/DMZ-White/cursor.theme",
+    require => Package["dmz-cursor-theme"],
+  }
+
 
   apt::source { "mint":
     location   => "http://packages.linuxmint.com/",

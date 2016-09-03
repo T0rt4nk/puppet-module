@@ -10,19 +10,7 @@ class tortank::base {
     template => "tortank/motd.erb",
   }
 
-  class { tortank::users:
-    user          => "max",
-    xdg_dirs      => {
-      download    => '$HOME/downloads',
-      templates   => '$HOME',
-      publicshare => '$HOME',
-      desktop     => '$HOME/desktop',
-      documents   => '$HOME/documents',
-      music       => '$HOME/music',
-      pictures    => '$HOME/pictures',
-      videos      => '$HOME/videos',
-    }
-  }
+  include tortank::users
 }
 
 class tortank::packages::init {
@@ -155,10 +143,5 @@ class tortank::config {
 
   class { tortank::keyboard:
     layout => "fr"
-  }
-
-  file { "/etc/alternatives/x-cursor-theme":
-    ensure => link,
-    target => "/usr/share/icons/DMZ-White/cursor.theme",
   }
 }
