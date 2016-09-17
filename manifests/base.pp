@@ -5,12 +5,16 @@ class tortank::base {
   include tortank::cinnamon
   include tortank::python
   include tortank::dconf
+  include tortank::users
 
   class { "motd":
     template => "tortank/motd.erb",
   }
 
-  include tortank::users
+  class { tortank::autologin:
+    user    => "guest",
+    require => [Class["tortank::cinnamon"], Class["tortank::users"]]
+  }
 }
 
 class tortank::packages::init {
@@ -83,6 +87,7 @@ class tortank::packages {
 
   $packages_uninstall = ["apt-listchange"]
   $packages_experimental = ["neovim"]
+  $packages_unstable = ["libmsgpackc2"]
   $packages = [
     "git", "tig", "zsh", "tmux", "ranger", "make", "apt-file",
     "rxvt-unicode-256color"
@@ -92,6 +97,10 @@ class tortank::packages {
 
   package { $packages_uninstall: ensure => purged, }
 
+  package { $packages_unstable:
+    install_options => ["-t", "unstable"],
+    require  => Exec["apt_update"],
+  } ->
   package { $packages_experimental:
     install_options => ["-t", "experimental"],
     require  => Exec["apt_update"],

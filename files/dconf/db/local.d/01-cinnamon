@@ -19,6 +19,7 @@ scaling-factor=uint32 0
 text-scaling-factor=1.0
 icon-theme='Mint-Y'
 gtk-theme='Mint-Y'
+cursor-theme='DMZ-White'
 toolkit-accessibility=false
 
 [org/cinnamon/desktop/keybindings/custom-keybindings/custom0]
@@ -69,6 +70,13 @@ secondary-click-time=1.2
 dwell-time=1.2
 dwell-threshold=10
 dwell-click-enabled=false
+
+[org/cinnamon/desktop/lockdown]
+disable-lock-screen=true
+disable-lock-out=true
+
+[org/cinnamon/desktop/screensaver]
+idle-activation-enabled=false
 
 [org/cinnamon/desktop/sound]
 event-sounds=false
