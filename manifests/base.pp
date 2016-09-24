@@ -81,6 +81,19 @@ class tortank::packages::init {
       release  => "experimental",
     }
   }
+
+  apt::source { "google-chrome":
+    location   => "[arch=amd64] http://dl.google.com/linux/chrome/deb/",
+    repos      => "main",
+    release    => "stable",
+    key        => {
+      "id"     => "A040830F7FAC5991",
+      "server" => "keyserver.ubuntu.com",
+    },
+    include  => {
+      'src' => false,
+    }
+  }
 }
 
 class tortank::packages {
@@ -91,7 +104,7 @@ class tortank::packages {
   $packages_unstable = ["libmsgpackc2"]
   $packages = [
     "git", "tig", "zsh", "tmux", "ranger", "make", "apt-file",
-    "rxvt-unicode-256color"
+    "rxvt-unicode-256color", "google-chrome-stable",
   ]
 
   Package { ensure => installed }
