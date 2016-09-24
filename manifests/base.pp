@@ -3,6 +3,7 @@ class tortank::base {
   include tortank::packages
 
   include tortank::cinnamon
+  include tortank::steam
   include tortank::python
   include tortank::dconf
   include tortank::users

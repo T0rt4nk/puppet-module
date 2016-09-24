@@ -7,7 +7,8 @@ class tortank::cinnamon {
 class tortank::cinnamon::install {
   $packages = [
     "xserver-xorg", "x11-xserver-utils", "xfonts-base", "xinit",
-    "lightdm-gtk-greeter", "cinnamon-core", "libgl1-mesa-dri", "dmz-cursor-theme"
+    "lightdm-gtk-greeter", "cinnamon-core", "libgl1-mesa-dri", "dmz-cursor-theme",
+    "nvidia-driver",
   ]
   $mint_packages = [
     "mint-themes", "mint-y-theme", "mint-y-icons"
@@ -47,9 +48,13 @@ class tortank::cinnamon::install {
 
 class tortank::cinnamon::config {
 
-  file { "/etc/X11/xorg.conf.d/":
+  file { "/etc/X11/xorg.conf.d/20-intel.conf":
     ensure  => absent,
-    force   => true,
+  }
+
+  file { "/etc/X11/xorg.conf.d/20-nvidia.conf":
+    ensure  => present,
+    source => "puppet:///modules/tortank/20-nvidia.conf",
   }
 
   file { "/usr/share/images/wallpaper.jpg":

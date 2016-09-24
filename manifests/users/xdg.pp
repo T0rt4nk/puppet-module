@@ -6,6 +6,7 @@ define tortank::users::xdg (
     xdg_dirs => $xdg_dirs,
   } ~>
   tortank::users::xdg::reload { $user:
+    home => $home,
   }
 }
 
@@ -14,7 +15,7 @@ define tortank::users::xdg::generate (
 ) {
   $xdg_template = @(END)
   <% $xdg_dirs.each |$key, $value| { -%>
-  XDG_<%= upcase($key) %>_DIR="<%= $value %>"
+  XDG_<%= upcase($key) %>_DIR="<%= $value %>/"
   <% } -%>
   | END
 
@@ -38,10 +39,11 @@ define tortank::users::xdg::generate (
   }
 }
 
-define tortank::users::xdg::reload ($user = $title) {
+define tortank::users::xdg::reload ($user = $title, $home) {
   exec { "update $user xdg dirs":
     command     => "/usr/bin/xdg-user-dirs-update",
     user        => $user,
+    environment => ["XDG_CONFIG_HOME=$home/.config"],
     refreshonly => true,
   }
 }
