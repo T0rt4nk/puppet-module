@@ -1,0 +1,9 @@
+[Unit]
+Description=Scrub a zpool
+Requires=zfs-mount.service
+
+[Service]
+ExecStart=/sbin/zpool scrub "%i"
+
+[Install]
+WantedBy=multi-user.target

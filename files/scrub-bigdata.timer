@@ -1,0 +1,11 @@
+[Unit]
+Description=Runs a scrub on bigdata every week
+
+[Timer]
+# Time between running each consecutive time
+OnCalendar=weekly
+Persistent=true
+Unit=zfs-scrub@bigdata.service
+
+[Install]
+WantedBy=timers.target
